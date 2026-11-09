@@ -1,0 +1,105 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+  >
+  <meta
+    http-equiv="X-UA-Compatible"
+    content="ie=edge"
+  >
+  <title>Product Management</title>
+</head>
+<body>
+  <h1>Products</h1>
+
+  <h3>Add new product</h3>
+  <form id="createForm" enctype="multipart/form-data">
+    <label>Name: <input type="text" name="name" required></label>
+    <label>Price: <input type="number" step="0.01" name="price" required></label>
+    <label>Photo: <input type="file" name="photo" accept="image/*"></label>
+    <button type="submit">Create</button>
+  </form>
+
+  <h3>Product List</h3>
+  <button onClick="loadProducts()">Update List</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="productsTable"></tbody>
+  </table>
+
+  <script>
+    document.getElementById("createForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      
+      const res = await fetch("/api/products", {
+        method: "POST",
+        body: formData
+      });
+      
+      if (res.ok) {
+        alert("Product added!")
+        e.target.reset();
+        await loadProducts();
+      } else {
+        const err = await res.text();
+        alert("Error: " + err);
+      }
+    });
+    
+    async function loadProducts() {
+      const res = await fetch("/api/products");
+      
+      if (!res.ok) {
+        alert("Error downloading products");
+        return;
+      }
+
+      const products = await res.json();
+      const tbody = document.getElementById('productsTable');
+      tbody.innerHTML = '';
+
+      products.forEach(p => {
+        tbody.innerHTML += `
+                    <tr>
+                        <td>${p.Id}</td>
+                        <td><img src="${p.ImageUrl}" alt="${p.Name}"></td>
+                        <td>${p.Name}</td>
+                        <td>${p.Price} uah</td>
+                        <td>
+                            <button onclick="deleteProduct(${p.Id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+      });
+    }
+    
+    async function deleteProduct(id) {
+      if (!confirm("Delete this product?")) return;
+      
+      const res = await fetch("/api/products/" + id, { method: "DELETE" });
+      
+      if (res.ok) {
+        await loadProducts();
+      } else {
+        alert("Couldn't download product.");
+      }
+    }
+    
+    loadProducts();
+  </script>
+</body>
+</html>
