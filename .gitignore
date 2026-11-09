@@ -1,0 +1,8 @@
+# IDE settings
+.idea/
+.vs/
+*.user
+
+# Build outputs
+bin/
+obj/
